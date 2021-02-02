@@ -6,3 +6,7 @@ numpy==1.19.3
 scipy==1.5.4
 mpyq==0.2.5
 matplotlib==3.3.3
+
+sc2~=0.11.2
+six~=1.15.0
+setuptools~=52.0.0

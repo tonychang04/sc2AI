@@ -1,4 +1,14 @@
-from sc2 import BotAI, Race, UnitTypeId
+import sc2
+
+from sc2 import BotAI, Race, UnitTypeId, AbilityId
+from sc2 import sc2.units
+
+from sc2.units import UnitSelection
+from sc2.unit import Unit
+from sc2.position import Point2
+from sc2.units import Units
+from sc2.player import Bot,Computer
+
 
 
 class CompetitiveBot(BotAI):
@@ -12,6 +22,8 @@ class CompetitiveBot(BotAI):
         Race.Protoss
         Race.Random
     """
+    def __init__(self):
+        sc2.BotAI.__init__(self)
 
     async def on_start(self):
         print("Game started")
@@ -21,6 +33,7 @@ class CompetitiveBot(BotAI):
         await self.distribute_workers()
         await self.build_worker()
         await self.build_pylon()
+        await self.build_gateways()
         # Populate this function with whatever your bot should do!
         pass
 
@@ -45,11 +58,24 @@ class CompetitiveBot(BotAI):
         ):
             await self.build(UnitTypeId.PYLON, near = pos)
 
+    # build gateway next to a random pylon
     async def build_gateways(self):
         if (
-           self.structures()
+            self.structures(UnitTypeId.PYLON).ready()
+            and self.can_afford(UnitTypeId.GATEWAY)
+            and not self.structures(UnitTypeId.GATEWAY)
         ):
-            pass
+            pylon = self.structures(UnitTypeId.PYLON).ready.random
+            await self.build(UnitTypeId.GATEWAY,near = pylon)
+
+
+    # build gas
+    async def build_gas(self):
+        if self.structures(UnitTypeId.GATEWAY):
+            for nexus in self.townhalls.ready:
+                vgs =
+
+        pass
 
     def on_end(self, result):
         print("Game ended.")
