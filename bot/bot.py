@@ -1,7 +1,8 @@
 import sc2
 
 from sc2 import BotAI, Race, UnitTypeId, AbilityId
-from sc2 import sc2.units
+from sc2 import units
+
 
 from sc2.units import UnitSelection
 from sc2.unit import Unit
@@ -34,6 +35,8 @@ class CompetitiveBot(BotAI):
         await self.build_worker()
         await self.build_pylon()
         await self.build_gateways()
+
+
         # Populate this function with whatever your bot should do!
         pass
 
@@ -44,6 +47,7 @@ class CompetitiveBot(BotAI):
             self.can_afford(UnitTypeId.PROBE)
             and nexus.is_idle
             and self.workers.amount < self.townhalls.amount * 22
+
         ):
             nexus.train(UnitTypeId.PROBE)
 
@@ -58,6 +62,8 @@ class CompetitiveBot(BotAI):
         ):
             await self.build(UnitTypeId.PYLON, near = pos)
 
+            
+
     # build gateway next to a random pylon
     async def build_gateways(self):
         if (
@@ -71,9 +77,9 @@ class CompetitiveBot(BotAI):
 
     # build gas
     async def build_gas(self):
-        if self.structures(UnitTypeId.GATEWAY):
-            for nexus in self.townhalls.ready:
-                vgs =
+        #if self.structures(UnitTypeId.GATEWAY):
+         #   for nexus in self.townhalls.ready:
+             #   vgs =
 
         pass
 
