@@ -36,6 +36,7 @@ class CompetitiveBot(BotAI):
         await self.build_pylon()
         await self.build_gateways()
         await self.build_gas()
+        await self.build_cyber_core()
 
 
         # Populate this function with whatever your bot should do!
@@ -43,22 +44,25 @@ class CompetitiveBot(BotAI):
 
     # build workers whenever base are idle and each base has less than 22 workers
     async def build_worker(self):
+        probe_per_nexus = 22
         nexus = self.townhalls.ready.random
         if (
             self.can_afford(UnitTypeId.PROBE)
             and nexus.is_idle
-            and self.workers.amount < self.townhalls.amount * 22
+            and self.workers.amount < self.townhalls.amount * probe_per_nexus
 
         ):
             nexus.train(UnitTypeId.PROBE)
 
     # build pylon facing the enemy and near nexus
     async def build_pylon(self):
+        pylon_from_nexus = 10
+        remaining_supply = 3
         nexus = self.townhalls.ready.random
-        pos = nexus.position.towards(self.enemy_start_locations[0], 10)
+        pos = nexus.position.towards(self.enemy_start_locations[0], pylon_from_nexus)
 
         if (
-            self.supply_left < 3
+            self.supply_left < remaining_supply
             and self.already_pending(UnitTypeId.PYLON) == 0
             and self.can_afford(UnitTypeId.PYLON)
         ):
@@ -73,15 +77,16 @@ class CompetitiveBot(BotAI):
             and self.can_afford(UnitTypeId.GATEWAY)
             and not self.structures(UnitTypeId.GATEWAY)
         ):
+            # if pylon is ready then build gate next to pylon
             pylon = self.structures(UnitTypeId.PYLON).ready.random
             await self.build(UnitTypeId.GATEWAY,near = pylon)
 
-
     # build gas
     async def build_gas(self):
+        gas_to_nexus = 15
         if self.structures(UnitTypeId.GATEWAY):
             for nexus in self.townhalls.ready:
-                vgs = self.vespene_geyser.closer_than(15,nexus)
+                vgs = self.vespene_geyser.closer_than(gas_to_nexus,nexus)
                 for vg in vgs:
                     if not self.can_afford(UnitTypeId.ASSIMILATOR):
                         break
@@ -91,6 +96,17 @@ class CompetitiveBot(BotAI):
                     if not self.gas_buildings or not self.gas_buildings.closer_than(1,vg):
                         worker.build(UnitTypeId.ASSIMILATOR,vg)
                         worker.stop(queue= True)
+
+
+    async def build_cyber_core(self):
+        if (self.structures(UnitTypeId.GATEWAY).ready
+            and self.can_afford(UnitTypeId.CYBERNETICSCORE)
+            and not self.structures(UnitTypeId.CYBERNETICSCORE)
+            and not self.already_pending(UnitTypeId.CYBERNETICSCORE)):
+                pylon = self.structures(UnitTypeId.PYLON).ready.random
+                await self.build(UnitTypeId.CYBERNETICSCORE, near=pylon)
+
+
 
 
     def on_end(self, result):
