@@ -35,6 +35,7 @@ class CompetitiveBot(BotAI):
         await self.build_worker()
         await self.build_pylon()
         await self.build_gateways()
+        await self.build_gas()
 
 
         # Populate this function with whatever your bot should do!
@@ -55,6 +56,7 @@ class CompetitiveBot(BotAI):
     async def build_pylon(self):
         nexus = self.townhalls.ready.random
         pos = nexus.position.towards(self.enemy_start_locations[0], 10)
+
         if (
             self.supply_left < 3
             and self.already_pending(UnitTypeId.PYLON) == 0
@@ -77,11 +79,19 @@ class CompetitiveBot(BotAI):
 
     # build gas
     async def build_gas(self):
-        #if self.structures(UnitTypeId.GATEWAY):
-         #   for nexus in self.townhalls.ready:
-             #   vgs =
+        if self.structures(UnitTypeId.GATEWAY):
+            for nexus in self.townhalls.ready:
+                vgs = self.vespene_geyser.closer_than(15,nexus)
+                for vg in vgs:
+                    if not self.can_afford(UnitTypeId.ASSIMILATOR):
+                        break
+                    worker = self.select_build_worker(vg.position)
+                    if (worker is None):
+                        break
+                    if not self.gas_buildings or not self.gas_buildings.closer_than(1,vg):
+                        worker.build(UnitTypeId.ASSIMILATOR,vg)
+                        worker.stop(queue= True)
 
-        pass
 
     def on_end(self, result):
         print("Game ended.")

@@ -86,7 +86,7 @@ def parse_arguments():
 
     # Both Ladder and Local play arguments
     parser.add_argument("--OpponentId", type=str, help="A unique value identifying opponent.")
-    parser.add_argument("--Realtime",action='store_false', help="Whether to use realtime mode. Default is false.")
+    parser.add_argument("--Realtime",action='store_true', help="Whether to use realtime mode. Default is false.")
 
     args, unknown_args = parser.parse_known_args()
 
