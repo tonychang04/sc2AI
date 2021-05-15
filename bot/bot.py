@@ -37,6 +37,8 @@ class CompetitiveBot(BotAI):
         await self.build_gateways()
         await self.build_gas()
         await self.build_cyber_core()
+        await self.train_stalkers()
+        await self.build_four_gates()
 
 
         # Populate this function with whatever your bot should do!
@@ -56,10 +58,10 @@ class CompetitiveBot(BotAI):
 
     # build pylon facing the enemy and near nexus
     async def build_pylon(self):
-        pylon_from_nexus = 10
+        pylon_from_nexus_dis = 10
         remaining_supply = 3
         nexus = self.townhalls.ready.random
-        pos = nexus.position.towards(self.enemy_start_locations[0], pylon_from_nexus)
+        pos = nexus.position.towards(self.enemy_start_locations[0], pylon_from_nexus_dis)
 
         if (
             self.supply_left < remaining_supply
@@ -106,7 +108,18 @@ class CompetitiveBot(BotAI):
                 pylon = self.structures(UnitTypeId.PYLON).ready.random
                 await self.build(UnitTypeId.CYBERNETICSCORE, near=pylon)
 
+    async def train_stalkers(self):
+        for gateway in self.structures(UnitTypeId.GATEWAY):
+            if (self.can_afford(UnitTypeId.STALKER) and gateway.is_idle):
+                gateway.train(UnitTypeId.STALKER)
 
+
+    async def build_four_gates(self):
+        if (self.structures(UnitTypeId.PYLON).ready
+            and self.can_afford(UnitTypeId.GATEWAY)
+            and self.structures(UnitTypeId.GATEWAY).amount < 4):
+                pylon = self.structures(UnitTypeId.PYLON).ready.random
+                await self.build(UnitTypeId.GATEWAY, near = pylon)
 
 
     def on_end(self, result):
