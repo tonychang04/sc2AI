@@ -2,6 +2,7 @@ import sc2
 
 from sc2 import BotAI, Race, UnitTypeId, AbilityId
 from sc2 import units
+from sc2.ids.upgrade_id import UpgradeId
 
 from sc2.units import UnitSelection
 from sc2.unit import Unit
@@ -39,6 +40,8 @@ class CompetitiveBot(BotAI):
         await self.train_stalkers()
         await self.build_four_gates()
         await self.chrono()
+        await self.warp_research()
+        await self.attack()
 
         # Populate this function with whatever your bot should do!
         pass
@@ -110,19 +113,38 @@ class CompetitiveBot(BotAI):
                 gateway.train(UnitTypeId.STALKER)
 
     async def build_four_gates(self):
+        num_gates = 4
         if (self.structures(UnitTypeId.PYLON).ready
                 and self.can_afford(UnitTypeId.GATEWAY)
-                and self.structures(UnitTypeId.GATEWAY).amount < 4):
+                and self.structures(UnitTypeId.GATEWAY).amount < num_gates):
             pylon = self.structures(UnitTypeId.PYLON).ready.random
             await self.build(UnitTypeId.GATEWAY, near=pylon)
 
     async def chrono(self):
+        chrono_energy = 50
         if (self.structures(UnitTypeId.PYLON)):
             nexus = self.structures(UnitTypeId.NEXUS).ready.random
             if (not self.structures(UnitTypeId.CYBERNETICSCORE).ready
                     and self.structures(UnitTypeId.PYLON).amount > 0
-                    and nexus.energy >= 50):
-                nexus(AbilityId.EFFECT_CHRONOBOOST, nexus)
+                    and nexus.energy >= chrono_energy):
+                nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, nexus)
+
+    async def warp_research(self):
+        if (
+            self.structures(UnitTypeId.CYBERNETICSCORE)
+            and self.can_afford(AbilityId.RESEARCH_WARPGATE)
+            and not self.already_pending(AbilityId.RESEARCH_WARPGATE)
+        ):
+            cybercore = self.structures(UnitTypeId.CYBERNETICSCORE).ready.random
+            cybercore.research(UpgradeId.WARPGATERESEARCH)
+
+    async def attack(self):
+        stalker_count = self.units(UnitTypeId.STALKER).amount
+        stalkers = self.units(UnitTypeId.STALKER)
+        if stalker_count > 4:
+            for stalker in stalkers:
+                stalker.attack(self.enemy_start_locations[0])
+
 
 
     def on_end(self, result):
