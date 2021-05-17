@@ -38,6 +38,7 @@ class CompetitiveBot(BotAI):
         await self.chrono()
         await self.warp_research()
         await self.attack()
+        await self.stalker_micro()
 
         # Populate this function with whatever your bot should do!
         pass
@@ -172,6 +173,15 @@ class CompetitiveBot(BotAI):
             for stalker in stalkers:
                 stalker.attack(self.enemy_start_locations[0])
 
+    async def stalker_micro(self):
+        stalkers = self.units(UnitTypeId.STALKER)
+        enemy_loc = self.enemy_start_locations[0]
+        if self.structures(UnitTypeId.PYLON).ready:
+            for stalker in stalkers:
+                if stalker.weapon_ready:
+                    stalker.attack(enemy_loc)
+                else:
+                    stalker.move(self.structures(UnitTypeId.PYLON).closest_to(enemy_loc))
 
     def on_end(self, result):
         print("Game ended.")
