@@ -1,14 +1,9 @@
 import sc2
 
 from sc2 import BotAI, Race, UnitTypeId, AbilityId
-from sc2 import units
 from sc2.ids.upgrade_id import UpgradeId
-
-from sc2.units import UnitSelection
-from sc2.unit import Unit
 from sc2.position import Point2
-from sc2.units import Units
-from sc2.player import Bot, Computer
+
 
 
 class CompetitiveBot(BotAI):
@@ -54,9 +49,11 @@ class CompetitiveBot(BotAI):
                 self.can_afford(UnitTypeId.PROBE)
                 and nexus.is_idle
                 and self.workers.amount < self.townhalls.amount * probe_per_nexus
-
         ):
             nexus.train(UnitTypeId.PROBE)
+
+
+
 
     # build pylon facing the enemy and near nexus
     async def build_pylon(self):
@@ -72,16 +69,19 @@ class CompetitiveBot(BotAI):
         ):
             await self.build(UnitTypeId.PYLON, near=pos)
 
+
     # build gateway next to a random pylon
     async def build_gateways(self):
         if (
-                self.structures(UnitTypeId.PYLON).ready()
+                self.structures(UnitTypeId.PYLON).ready
                 and self.can_afford(UnitTypeId.GATEWAY)
                 and not self.structures(UnitTypeId.GATEWAY)
         ):
             # if pylon is ready then build gate next to pylon
+
             pylon = self.structures(UnitTypeId.PYLON).ready.random
-            await self.build(UnitTypeId.GATEWAY, near=pylon)
+            await self.build(UnitTypeId.GATEWAY, near= pylon)
+
 
     # build gas
     async def build_gas(self):
@@ -103,48 +103,67 @@ class CompetitiveBot(BotAI):
         if (self.structures(UnitTypeId.GATEWAY).ready
                 and self.can_afford(UnitTypeId.CYBERNETICSCORE)
                 and not self.structures(UnitTypeId.CYBERNETICSCORE)
+
                 and not self.already_pending(UnitTypeId.CYBERNETICSCORE)):
             pylon = self.structures(UnitTypeId.PYLON).ready.random
             await self.build(UnitTypeId.CYBERNETICSCORE, near=pylon)
 
+
+
     async def train_stalkers(self):
-        for gateway in self.structures(UnitTypeId.GATEWAY):
-            if (self.can_afford(UnitTypeId.STALKER) and gateway.is_idle):
+        for gateway in self.structures(UnitTypeId.GATEWAY).ready:
+            if self.can_afford(UnitTypeId.STALKER) and gateway.is_idle:
                 gateway.train(UnitTypeId.STALKER)
+
+        for warpgate in self.structures(UnitTypeId.WARPGATE).ready:
+            if self.can_afford(UnitTypeId.STALKER) and warpgate.is_idle:
+                pylon = self.structures(UnitTypeId.PYLON).ready.random
+                warpgate.warp_in(UnitTypeId.STALKER,pylon.position.random_on_distance(3))
+               # print("Nice")
 
     async def build_four_gates(self):
         num_gates = 4
         if (self.structures(UnitTypeId.PYLON).ready
                 and self.can_afford(UnitTypeId.GATEWAY)
-                and self.structures(UnitTypeId.GATEWAY).amount < num_gates):
+                and self.structures(UnitTypeId.GATEWAY).amount +
+                     self.structures(UnitTypeId.WARPGATE).amount < num_gates):
+
             pylon = self.structures(UnitTypeId.PYLON).ready.random
             await self.build(UnitTypeId.GATEWAY, near=pylon)
 
     async def chrono(self):
         chrono_energy = 50
-        if (self.structures(UnitTypeId.PYLON)):
+        if self.structures(UnitTypeId.PYLON):
             nexus = self.structures(UnitTypeId.NEXUS).ready.random
-            if (not self.structures(UnitTypeId.CYBERNETICSCORE).ready
+            if (
+                    not self.structures(UnitTypeId.CYBERNETICSCORE).ready
                     and self.structures(UnitTypeId.PYLON).amount > 0
-                    and nexus.energy >= chrono_energy):
+                    and nexus.energy >= chrono_energy
+            ):
                 nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, nexus)
+            elif (
+                    nexus.energy >= chrono_energy
+                    and 1 > self.already_pending_upgrade(UpgradeId.WARPGATERESEARCH) > 0):
+                cybercore = self.structures(UnitTypeId.CYBERNETICSCORE).ready.random
+                nexus(AbilityId.EFFECT_CHRONOBOOSTENERGYCOST, cybercore)
+
 
     async def warp_research(self):
         if (
             self.structures(UnitTypeId.CYBERNETICSCORE).ready
             and self.can_afford(AbilityId.RESEARCH_WARPGATE)
-            and not self.already_pending_upgrade(UpgradeId.WARPGATERESEARCH)
+            and self.already_pending_upgrade(UpgradeId.WARPGATERESEARCH) == 0
         ):
             cybercore = self.structures(UnitTypeId.CYBERNETICSCORE).ready.random
             cybercore.research(UpgradeId.WARPGATERESEARCH)
 
     async def attack(self):
+        wanted_stalker_count = 5
         stalker_count = self.units(UnitTypeId.STALKER).amount
         stalkers = self.units(UnitTypeId.STALKER)
-        if stalker_count > 4:
+        if stalker_count > wanted_stalker_count:
             for stalker in stalkers:
                 stalker.attack(self.enemy_start_locations[0])
-
 
 
     def on_end(self, result):
