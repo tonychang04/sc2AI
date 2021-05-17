@@ -131,9 +131,9 @@ class CompetitiveBot(BotAI):
 
     async def warp_research(self):
         if (
-            self.structures(UnitTypeId.CYBERNETICSCORE)
+            self.structures(UnitTypeId.CYBERNETICSCORE).ready
             and self.can_afford(AbilityId.RESEARCH_WARPGATE)
-            and not self.already_pending(AbilityId.RESEARCH_WARPGATE)
+            and not self.already_pending_upgrade(UpgradeId.WARPGATERESEARCH)
         ):
             cybercore = self.structures(UnitTypeId.CYBERNETICSCORE).ready.random
             cybercore.research(UpgradeId.WARPGATERESEARCH)
