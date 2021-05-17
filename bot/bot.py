@@ -20,6 +20,7 @@ class CompetitiveBot(BotAI):
 
     def __init__(self):
         sc2.BotAI.__init__(self)
+        sc2.proxy = False
 
     async def on_start(self):
         print("Game started")
@@ -52,9 +53,6 @@ class CompetitiveBot(BotAI):
         ):
             nexus.train(UnitTypeId.PROBE)
 
-
-
-
     # build pylon facing the enemy and near nexus
     async def build_pylon(self):
         pylon_from_nexus_dis = 10
@@ -69,6 +67,16 @@ class CompetitiveBot(BotAI):
         ):
             await self.build(UnitTypeId.PYLON, near=pos)
 
+        # build proxy pylon after 4 gates
+        if (
+                self.structures(UnitTypeId.GATEWAY).amount
+                + self.structures(UnitTypeId.WARPGATE).amount == 4
+                and self.can_afford(UnitTypeId.PYLON)
+                and not sc2.proxy
+        ):
+            proxy_pos = self.game_info.map_center.towards(self.enemy_start_locations[0],20)
+            await self.build(UnitTypeId.PYLON, near = proxy_pos)
+            sc2.proxy = True
 
     # build gateway next to a random pylon
     async def build_gateways(self):
@@ -80,8 +88,7 @@ class CompetitiveBot(BotAI):
             # if pylon is ready then build gate next to pylon
 
             pylon = self.structures(UnitTypeId.PYLON).ready.random
-            await self.build(UnitTypeId.GATEWAY, near= pylon)
-
+            await self.build(UnitTypeId.GATEWAY, near = pylon)
 
     # build gas
     async def build_gas(self):
@@ -109,7 +116,6 @@ class CompetitiveBot(BotAI):
             await self.build(UnitTypeId.CYBERNETICSCORE, near=pylon)
 
 
-
     async def train_stalkers(self):
         for gateway in self.structures(UnitTypeId.GATEWAY).ready:
             if self.can_afford(UnitTypeId.STALKER) and gateway.is_idle:
@@ -117,9 +123,9 @@ class CompetitiveBot(BotAI):
 
         for warpgate in self.structures(UnitTypeId.WARPGATE).ready:
             if self.can_afford(UnitTypeId.STALKER) and warpgate.is_idle:
-                pylon = self.structures(UnitTypeId.PYLON).ready.random
-                warpgate.warp_in(UnitTypeId.STALKER,pylon.position.random_on_distance(3))
-               # print("Nice")
+                pylon = self.structures(UnitTypeId.PYLON).closest_to(self.enemy_start_locations[0])
+                warpgate.warp_in(UnitTypeId.STALKER, pylon.position.random_on_distance(3))
+
 
     async def build_four_gates(self):
         num_gates = 4
@@ -130,6 +136,7 @@ class CompetitiveBot(BotAI):
 
             pylon = self.structures(UnitTypeId.PYLON).ready.random
             await self.build(UnitTypeId.GATEWAY, near=pylon)
+
 
     async def chrono(self):
         chrono_energy = 50
